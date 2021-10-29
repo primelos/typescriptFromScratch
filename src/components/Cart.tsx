@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createRef } from "react";
 import CartCSS from "./Cart.module.css";
 import { FiShoppingCart } from "react-icons/fi";
 import { AppStateContext } from "./AppState";
@@ -10,19 +10,38 @@ interface State {
 }
 
 class Cart extends React.Component<Props, State> {
+  #containerRef: React.RefObject<HTMLDivElement>;
   constructor(props: Props) {
     super(props);
     this.state = {
       isOpen: false,
     };
+    this.#containerRef = createRef();
   }
+
   handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    console.log(e.target);
     if ((e.target as HTMLElement).nodeName === "SPAN") {
       e.target as HTMLSpanElement;
     }
     this.setState((prev) => ({ isOpen: !prev.isOpen }));
   };
+
+  handleOutsideClick = (e: MouseEvent) => {
+    if (
+      this.#containerRef.current &&
+      !this.#containerRef.current.contains(e.target as Node)
+    ) {
+      this.setState({ isOpen: false });
+    }
+  };
+
+  componentDidMount() {
+    document.addEventListener("mousedown", this.handleOutsideClick);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("mousedown", this.handleOutsideClick);
+  }
 
   render() {
     return (
@@ -32,7 +51,7 @@ class Cart extends React.Component<Props, State> {
             return sum + item.quantity;
           }, 0);
           return (
-            <div className={CartCSS.cartContainer}>
+            <div className={CartCSS.cartContainer} ref={this.#containerRef}>
               <button
                 type="button"
                 className={CartCSS.button}
